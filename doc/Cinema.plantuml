@@ -1,0 +1,115 @@
+@startuml
+
+' Перечисление SeatStatus
+enum SeatStatus {
+  FREE
+  SOLD
+  RESERVED
+}
+
+' Класс Seat
+class Seat {
+  -row: int
+  -number: int
+  +Seat(row: int, number: int)
+  +getRow(): int
+  +getNumber(): int
+  +equals(o: Object): boolean
+  +hashCode(): int
+  +toString(): String
+}
+
+' Класс Theater
+class Theater {
+  -name: String
+  -rows: int
+  -seatsPerRow: int
+  -allSeats: List<Seat>
+  +Theater(name: String, rows: int, seatsPerRow: int)
+  +getName(): String
+  +getRows(): int
+  +getSeatsPerRow(): int
+  +getAllSeats(): List<Seat>
+  -initializeSeats(): List<Seat>
+}
+
+' Класс MovieSession
+class MovieSession {
+  -sessionId: String
+  -movieTitle: String
+  -theater: Theater
+  -dateTime: LocalDateTime
+  -seatStatusMap: Map<Seat, SeatStatus>
+  +MovieSession(sessionId: String, movieTitle: String, theater: Theater, dateTime: LocalDateTime)
+  +getSessionId(): String
+  +getMovieTitle(): String
+  +getTheater(): Theater
+  +getDateTime(): LocalDateTime
+  +getSeatStatusMap(): Map<Seat, SeatStatus>
+  -initializeSeatStatus(): Map<Seat, SeatStatus>
+  +isSeatNotValid(seat: Seat): boolean
+  +getSeatStatus(seat: Seat): SeatStatus
+  +setSeatStatus(seat: Seat, status: SeatStatus)
+  +getAvailableSeats(): List<Seat>
+  +getReservedSeats(): List<Seat>
+  +getSoldSeats(): List<Seat>
+}
+
+' Класс Ticket
+class Ticket {
+  -ticketId: String
+  -session: MovieSession
+  -seat: Seat
+  -issueTime: LocalDateTime
+  -isActive: boolean
+  -isReservation: boolean
+  +Ticket(ticketId: String, session: MovieSession, seat: Seat, isReservation: boolean)
+  +getTicketId(): String
+  +getSession(): MovieSession
+  +getSeat(): Seat
+  +getIssueTime(): LocalDateTime
+  +isActive(): boolean
+  +setActive(active: boolean)
+  +isReservation(): boolean
+  +toString(): String
+}
+
+' Класс TicketManagementSystem
+class TicketManagementSystem {
+  -sessions: Map<String, MovieSession>
+  -tickets: Map<String, Ticket>
+  -ticketCounter: int
+  +TicketManagementSystem()
+  +createMovieSession(movieTitle: String, theater: Theater, dateTime: LocalDateTime): MovieSession
+  +getAvailableSessions(): List<MovieSession>
+  +getSession(sessionId: String): MovieSession
+  +buyTicket(sessionId: String, row: int, seatNumber: int): Ticket
+  +reserveTicket(sessionId: String, row: int, seatNumber: int): Ticket
+  +cancelTicket(ticketId: String)
+  +confirmReservation(ticketId: String): Ticket
+  +getAvailableSeats(sessionId: String): List<Seat>
+  +getTicket(ticketId: String): Ticket
+  +getAllActiveTickets(): List<Ticket>
+  -generateTicketId(): String
+}
+
+' Класс CinemaSystem
+class CinemaSystem {
+  -ticketSystem: TicketManagementSystem
+  +CinemaSystem()
+  +getTicketSystem(): TicketManagementSystem
+  +main(args: String[])
+}
+
+' Связи между классами
+Theater o--> "many" Seat : contains
+MovieSession o--> "1" Theater : uses
+MovieSession o--> "many" Seat : manages
+MovieSession --> SeatStatus : uses
+Ticket o--> "1" MovieSession : references
+Ticket o--> "1" Seat : references
+TicketManagementSystem o--> "many" MovieSession : manages
+TicketManagementSystem o--> "many" Ticket : manages
+CinemaSystem o--> "1" TicketManagementSystem : uses
+
+@enduml
