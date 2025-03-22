@@ -196,4 +196,120 @@ public class TicketManagementSystem {
     private String generateTicketId() {
         return "T" + (++ticketCounter);
     }
+
+    /**
+     * Выводит на консоль схему мест в зале для указанного сеанса в виде псевдографики
+     * @param sessionId ID сеанса
+     */
+    public void printSeatingChart(String sessionId) {
+        // Получаем сеанс по ID
+        MovieSession session = getSession(sessionId);
+        if (session == null) {
+            throw new IllegalArgumentException(SESSION_NOT_FOUND + sessionId);
+        }
+
+        Theater theater = session.getTheater();
+        int rows = theater.getRows();
+        int seatsPerRow = theater.getSeatsPerRow();
+
+        // Выводим заголовок с номерами мест
+        System.out.print("       ");
+        for (int seat = 1; seat <= seatsPerRow; seat++) {
+            System.out.printf("%-3d ", seat);
+        }
+        System.out.println();
+
+        // Выводим каждый ряд
+        for (int row = 1; row <= rows; row++) {
+            System.out.printf("%-5d ", row);
+
+            for (int seat = 1; seat <= seatsPerRow; seat++) {
+                Seat currentSeat = new Seat(row, seat);
+                SeatStatus status = session.getSeatStatus(currentSeat);
+
+                char symbol = switch (status) {
+                    case FREE -> '.';
+                    case SOLD -> '█';
+                    case RESERVED -> 'R';
+                };
+
+                System.out.printf("%-3c ", symbol);
+            }
+
+            System.out.println();
+        }
+    }
+
+    /**
+     * Возвращает список мест в указанном ряду и диапазоне
+     *
+     * @param sessionId ID сеанса
+     * @param row номер ряда
+     * @param fromSeat начальный номер места
+     * @param toSeat конечный номер места
+     * @return список мест в указанном диапазоне
+     */
+    public List<Seat> getSeatsInRange(String sessionId, int row, int fromSeat, int toSeat) {
+        MovieSession session = getSession(sessionId);
+        if (session == null) {
+            throw new IllegalArgumentException(SESSION_NOT_FOUND + sessionId);
+        }
+
+        Theater theater = session.getTheater();
+        if (row < 1 || row > theater.getRows()) {
+            throw new IllegalArgumentException("Неверный номер ряда: " + row);
+        }
+
+        if (fromSeat < 1 || toSeat > theater.getSeatsPerRow() || fromSeat > toSeat) {
+            throw new IllegalArgumentException(
+                    String.format("Неверный диапазон мест: %d-%d", fromSeat, toSeat));
+        }
+
+        List<Seat> seats = new ArrayList<>();
+        for (int seatNum = fromSeat; seatNum <= toSeat; seatNum++) {
+            seats.add(new Seat(row, seatNum));
+        }
+
+        return seats;
+    }
+
+    /**
+     * Помечает свободные места в указанном диапазоне как проданные
+     * и возвращает список созданных билетов
+     *
+     * @param sessionId ID сеанса
+     * @param row номер ряда
+     * @param fromSeat начальный номер места
+     * @param toSeat конечный номер места
+     * @return список созданных билетов для проданных мест
+     */
+    public List<Ticket> buyTicketsInRange(String sessionId, int row, int fromSeat, int toSeat) {
+        MovieSession session = getSession(sessionId);
+        if (session == null) {
+            throw new IllegalArgumentException(SESSION_NOT_FOUND + sessionId);
+        }
+
+        List<Seat> seatsInRange = getSeatsInRange(sessionId, row, fromSeat, toSeat);
+        List<Ticket> soldTickets = new ArrayList<>();
+
+        for (Seat seat : seatsInRange) {
+            SeatStatus status = session.getSeatStatus(seat);
+            if (status == SeatStatus.FREE) {
+                // Создаем билет для свободного места
+                String ticketId = generateTicketId();
+                Ticket ticket = new Ticket(ticketId, session, seat, false);
+
+                // Помечаем место как проданное
+                session.setSeatStatus(seat, SeatStatus.SOLD);
+                tickets.put(ticketId, ticket);
+
+                // Добавляем билет в результирующий список
+                soldTickets.add(ticket);
+            }
+        }
+
+        return soldTickets;
+    }
+
+
 }
