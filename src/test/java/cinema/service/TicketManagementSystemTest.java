@@ -76,7 +76,7 @@ class TicketManagementSystemTest {
 
 
     @Test
-    @DisplayName("Покупка билета на сеанс кино с неверным идентификатором сеанса")
+    @DisplayName("Бронирование билета на сеанс кино")
     void testReserveTicketSuccess() {
         Ticket ticket = ticketSystem.reserveTicket(session.getSessionId(), 1, 1);
 
@@ -88,7 +88,7 @@ class TicketManagementSystemTest {
     }
 
     @Test
-    @DisplayName("Покупка билета на уже забронированное место")
+    @DisplayName("Подтверждение бронирования")
     void testConfirmReservation() {
         Ticket reserved = ticketSystem.reserveTicket(session.getSessionId(), 1, 1);
         Ticket confirmed = ticketSystem.confirmReservation(reserved.getTicketId());
@@ -101,7 +101,7 @@ class TicketManagementSystemTest {
     }
 
     @Test
-    @DisplayName("Покупка билета на сеанс кино с неверным идентификатором сеанса")
+    @DisplayName("Отмена билета")
     void testCancelTicket() {
         Ticket ticket = ticketSystem.buyTicket(session.getSessionId(), 1, 1);
         int initialAvailable = ticketSystem.getAvailableSeats(session.getSessionId()).size();
@@ -114,7 +114,7 @@ class TicketManagementSystemTest {
     }
 
     @Test
-    @DisplayName("Покупка билета на сеанс кино с неверным идентификатором билета")
+    @DisplayName("Получение списка свободных мест")
     void testGetAvailableSeats() {
         List<Seat> initialSeats = ticketSystem.getAvailableSeats(session.getSessionId());
         assertEquals(25, initialSeats.size());
@@ -264,10 +264,37 @@ class TicketManagementSystemTest {
     }
 
     @Test
-    @DisplayName("Попытка купить билеты для несуществующего сеанса")
+    @DisplayName("Попытка купить билеты для несуществующего сеанса в диапазоне")
     void testBuyTicketsInRangeInvalidSession() {
         assertThrows(IllegalArgumentException.class, () ->
                         ticketSystem.buyTicketsInRange("INVALID_ID", 1, 1, 3),
                 "Должно бросить исключение при неверном ID сеанса");
+    }
+
+    @Test
+    @DisplayName("Покупка билета с пустым ID сеанса")
+    void testBuyTicketEmptySessionId() {
+        assertThrows(IllegalArgumentException.class, () ->
+                ticketSystem.buyTicket("", 1, 1)
+        );
+    }
+
+    @Test
+    @DisplayName("Отмена несуществующего билета")
+    void testCancelNonExistentTicket() {
+        assertThrows(IllegalArgumentException.class, () ->
+                ticketSystem.cancelTicket("NON_EXISTENT")
+        );
+    }
+
+    @Test
+    @DisplayName("Подтверждение уже подтвержденной брони")
+    void testConfirmAlreadyConfirmedReservation() {
+        Ticket reserved = ticketSystem.reserveTicket(session.getSessionId(), 1, 1);
+        ticketSystem.confirmReservation(reserved.getTicketId());
+
+        assertThrows(IllegalStateException.class, () ->
+                ticketSystem.confirmReservation(reserved.getTicketId())
+        );
     }
 }
