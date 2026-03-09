@@ -2,14 +2,19 @@ package cinema.service;
 
 import cinema.model.*;
 
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
+// ... существующий код ...
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class TicketManagementSystem {
     private final Map<String, MovieSession> sessions;  // Мапа сеансов (id -> сеанс)
+// ... существующий код ...
     private final Map<String, Ticket> tickets;         // Мапа билетов (id -> билет)
     private int ticketCounter;                         // Счетчик для генерации ID билетов
     private static final String SESSION_NOT_FOUND = "Сеанс не найден: ";
